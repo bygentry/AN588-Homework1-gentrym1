@@ -1,0 +1,30 @@
+---
+title: "AN588-Week-2"
+author: "Gentry Miller"
+format: html
+editor: visual
+date: "23 Jan, 2025"
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+install.packages("stringr")
+library("stringr")
+```
+
+# Challenges
+
+## Challenge 1
+
+```{r}
+v1 <- c("Stately,", "plump", "Buck", "Mulligan", "came", "from", "the", "stairhead,", "bearing", "a", "bowl", "of", "lather", "on", "which", "a", "mirror", "and", "a", "razor", "lay", "crossed")
+#v1
+```
+
+```{r}
+# I tried to use str_split() and str_split_i() but it was only pulling characters instead of the whole sub-string. When I set the boundary to word, it pulled NA.
+v2 <- v1[seq(0, length(v1), 3)]
+v2
+gsub("[[:punct:]]", "", v1)
+```
