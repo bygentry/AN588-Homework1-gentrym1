@@ -70,3 +70,22 @@ a[1:5, 1:5, 3, 3]
 ### 3.2.3 
 
 `a[1:5, 1:5, 3, 3]` returns a 5x5 matrix of the first 5 values for the first and second dimensions of a at the third value of the third and fourth dimensions.
+
+## Overwriting
+
+```{r}
+# Replaces a single val at m[7,1]
+m[7, 1] <- 564
+# Replaces the 8th column of m with all 2's
+m[, 8] <- 2
+# Replaces the values in rows 2-5 and columns 4-8 with 1
+m[2:5, 4:8] <- 1
+# Replaces the vals in row 2 col 4-8 with 20, row 3 cols 4-8 with 19, etc.
+m[2:5, 4:8] <- c(20, 19, 18, 17)
+# Replaces rows 2-5 and cols 4-8 with a new matrix of decreasing ints from 20-1 by row
+m[2:5, 4:8] <- matrix(data = c(20:1), nrow = 4, ncol = 5, byrow = TRUE)
+# replaces the vals in col 8 with alternating chars a and b and changes the data type of every value in the matrix to character
+m[, 8] <- c("a", "b")
+```
+
+## Lists and Data Frames
