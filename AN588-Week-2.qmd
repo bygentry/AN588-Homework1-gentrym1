@@ -28,3 +28,21 @@ v2 <- v1[seq(0, length(v1), 3)]
 v2
 gsub("[[:punct:]]", "", v1)
 ```
+
+## Challenge 2
+
+```{r}
+m <- matrix(data = 1:80, nrow = 8, ncol = 10, byrow = FALSE)
+```
+
+```{r}
+x <- matrix(data = c(m[,2], m[,3], m[,6]), nrow = 8, ncol = 3, byrow = FALSE)
+```
+
+```{r}
+x <- matrix(data = m[6:8,], nrow = 3, ncol = 10, byrow = FALSE) 
+```
+
+```{r}
+x <- matrix(data = m[2:6,2:9], nrow = 5, ncol = 8)
+```
