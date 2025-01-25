@@ -63,11 +63,11 @@ a[1:5, 1:5, 3, 3]
 
 `a[1, 1, 1, 2]` returns 300
 
-### 3.2.2 
+### 3.2.2
 
 `a[2, 3, 2, ]` returns a vector containing 364, 264, 164, and 64
 
-### 3.2.3 
+### 3.2.3
 
 `a[1:5, 1:5, 3, 3]` returns a 5x5 matrix of the first 5 values for the first and second dimensions of a at the third value of the third and fourth dimensions.
 
@@ -89,3 +89,30 @@ m[, 8] <- c("a", "b")
 ```
 
 ## Lists and Data Frames
+
+```{r}
+s <- c("this", "is", "a", "vector", "of", "strings")
+m <- matrix(data=1:40, nrow=5, ncol=8)
+b <- FALSE
+l <- list(s, m, b)
+```
+
+```{r}
+l[[2]]
+```
+
+```{r}
+l[[2]][2, 6]
+```
+
+```{r}
+l[c(1,3)]
+```
+
+```{r}
+str(l)
+names(l) <- c("string", "matrix", "logical")
+names(l)
+l$string
+l$matrix[3, 5]
+```
