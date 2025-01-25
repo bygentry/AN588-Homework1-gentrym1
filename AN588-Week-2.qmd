@@ -13,7 +13,7 @@ install.packages("stringr")
 library("stringr")
 ```
 
-# Challenges
+# Module 4
 
 ## Challenge 1
 
@@ -208,4 +208,15 @@ df <- data.frame(m3)
 df$X2 <- as.logical(df$X2)
 df$X3 <- as.factor(df$X3)
 str(df)
+```
+
+# Module 5
+
+```{r}
+install.packages(c("readr", "curl", "readxl", "XLConnect", "rdrop2", "repmis", "googledrive", "googlesheets4"))
+library("readr")
+library("curl")
+library("readxl")
+library("XLConnect")
+library("rdrop2")
 ```
