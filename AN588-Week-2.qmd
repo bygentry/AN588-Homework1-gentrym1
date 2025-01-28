@@ -9,7 +9,7 @@ editor_options:
 ---
 
 ```{r}
-install.packages("stringr")
+install.packages("stringr", repos = "http://cran.us.r-project.org")
 library("stringr")
 ```
 
