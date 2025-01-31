@@ -207,4 +207,5 @@ str(m3)
 df <- data.frame(m3)
 df$X2 <- as.logical(df$X2)
 df$X3 <- as.factor(df$X3)
+str(df)
 ```
