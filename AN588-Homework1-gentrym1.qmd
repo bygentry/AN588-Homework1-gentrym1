@@ -191,3 +191,20 @@ new_df
 new_df <- df[df$school == "BU", c("name.last", "name.first", "school")]
 new_df
 ```
+
+## Challenge 5
+
+```{r}
+# Create a vector to inform the matrix
+md = c(3, 0, 1, 23, 1, 2, 33, 1, 1, 42, 0, 1, 41, 0, 2)
+# Organize the data from md vector into matrix
+m3 <- matrix(data = md, nrow = 5, ncol = 3, byrow = TRUE)
+
+str(m3)
+```
+
+```{r}
+df <- data.frame(m3)
+df$X2 <- as.logical(df$X2)
+df$X3 <- as.factor(df$X3)
+```
