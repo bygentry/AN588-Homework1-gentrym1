@@ -155,7 +155,7 @@ Primates
 ### Data Frames
 
 ```{r}
-df <- read.csv("C:/Users/mille/Documents/School/BU Undergrad/Fifth Year/Spring25/AN588/AN588-Modules/random-people.csv", sep = ",", header = TRUE, stringsAsFactors = FALSE)
+df <- read.csv("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/refs/heads/master/AN588_Spring25/random-people.csv", sep = ",", header = TRUE, stringsAsFactors = FALSE)
 # only print select columns
 df[, c(1, 3, 4, 11, 12)]
 ```

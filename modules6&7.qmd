@@ -1,0 +1,611 @@
+---
+title: "AN588-Modules"
+author: "Gentry Miller"
+format: html
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+# Module 6
+
+## Prelim
+
+```{r}
+#install.packages(c("readr", "curl", "readxl", "writexl", "repmis", "googledrive", "googlesheets4"))
+library(tidyverse)
+```
+
+## Challenge 1
+
+```{r}
+library(curl)
+f <- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN588_Fall23/Country-Data-2016.csv")
+d <- read.csv(f, header=TRUE, sep=",", stringsAsFactors = FALSE)
+head(d)
+```
+
+```{r}
+summary(d)
+```
+
+Median pop: 4.912e+06
+
+Median area: 69700
+
+```{r}
+# Creates a var pop_density that is population/area, return reverse order of top 10
+d$pop_density <- d$population/d$area
+d <- d[order(-d$pop_density),]
+d[1:10,]
+```
+
+```{r}
+# Reverse order again
+d <- d[order(d$pop_density),]
+d[1:10,]
+```
+
+```{r}
+g <- d[order(-d$area),]
+g[1:20,]
+# Extract countries starting with A-F and summarize data
+new <- d[grep("^[A-F]", d$country),]
+summary(new)
+```
+
+## Challenge 2
+
+```{r}
+#| label: Box and Bar Plots
+par(mfrow=c(2,3))
+boxplot(d$population)
+boxplot(log(d$population))
+boxplot(d$area)
+boxplot(log(d$area))
+barplot(d$population)
+barplot(d$area)
+```
+
+## Challenge 3
+
+```{r}
+#| label: Histograms
+par(mfrow=c(1,2))
+hist(log(d$population), freq=FALSE, col="red", main="Plot 1", xlab="log(population size)", ylab="density", ylim=c(0,0.2))
+hist(log(d$area), freq=FALSE, col="red", main="Plot 2", xlab="log(area)", ylab="density", ylim=c(0,0.2))
+```
+
+```{r}
+#| label: abline
+par(mfrow=c(1,2))
+hist(log(d$population), freq=FALSE, col="red", main="Plot 1", xlab="log(population size)", ylab="density", ylim=c(0,0.2))
+hist(log(d$area), freq=FALSE, col="red", main="Plot 2", xlab="log(area)", ylab="density", ylim=c(0,0.2)) 
+```
+
+```{r}
+#| label: Density Plot
+par(mfrow = c(1, 1))  # set up one panel and redraw the log(population) histogram
+hist(log(d$population), freq = FALSE, col = "white", main = "My Plot with Mean and Density",
+    xlab = "log(population size)", ylab = "density", ylim = c(0, 0.2))
+abline(v = mean(log(d$population), na.rm = TRUE), col = "blue")
+lines(density(log(d$population), na.rm = TRUE), col = "orange")
+```
+
+## Challenge 4
+
+```{r}
+#| label: Tables
+sort(table(d$govt_form), decreasing=TRUE)
+```
+
+## Challenge 5
+
+```{r}
+f <- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN588_Fall23/KamilarAndCooperData.csv")
+d <- read.csv(f, header = TRUE, stringsAsFactors = FALSE)
+head(d)
+```
+
+```{r}
+boxplot(log(d$Body_mass_female_mean)~d$Family, main="Female Body Mass by Family", xlab="Family", ylab="log(Female body mass)") 
+```
+
+```{r}
+library(ggplot2)
+p <- ggplot(data = d, aes(x = Family, y = log(Body_mass_female_mean)))  #define the variables
+p <- p + geom_boxplot()  #graph them in a boxplot
+p <- p + theme(axis.text.x = element_text(angle = 90))  #put x-axis names at 90deg
+p <- p + ylab("log(Female Body Mass)")  #rename y-axis title
+p
+```
+
+## Challenge 6
+
+```{r}
+par(mfrow = c(1, 2))
+plot(x = d$Body_mass_female_mean, y = d$Brain_Size_Female_Mean)
+plot(x = log(d$Body_mass_female_mean), y = log(d$Brain_Size_Female_Mean))
+```
+
+```{r}
+p <- ggplot(data = d, aes(x = log(Body_mass_female_mean), y = log(Brain_Size_Female_Mean),
+    color = factor(Family)))  # first, we build a plot object and color points by Family
+p <- p + xlab("log(Female Body Mass)") + ylab("log(Female Brain Size)")  # then we modify the axis labels
+p <- p + geom_point()  # then we make a scatterplot
+p <- p + theme(legend.position = "bottom", legend.title = element_blank())  # then we modify the legend
+p  # and, finally, we plot the object
+```
+
+```{r}
+p <- p + facet_wrap(~Family, ncol = 4)
+p <- p + theme(legend.position = "none")
+p
+```
+
+```{r}
+p <- p + geom_smooth(method = "lm", fullrange = TRUE)
+p
+```
+
+## Challenge 7
+
+```{r}
+p <- ggplot(data = d, aes(x = log(Body_mass_female_mean), y = log(MaxLongevity_m)))
+p <- p + geom_point()
+p <- p + geom_smooth(method = "lm")
+p
+```
+
+### Aggregate Stats & dplyr
+
+```{r}
+aggregate(d$Body_mass_female_mean ~ d$Family, FUN = "mean", na.rm = TRUE)
+```
+
+```{r}
+library(dplyr)
+s <- filter(d, Family == "Hominidae" & Mass_Dimorphism > 2)
+head(s)  # filtering a data frame for certain rows
+```
+
+```{r}
+s <- arrange(d, Family, Genus, Body_mass_male_mean)  # rearranging a data frame...
+head(s)
+```
+
+```{r}
+s <- select(d, Family, Genus, Body_mass_male_mean)  # selecting specific columns...
+head(s)
+```
+
+```{r}
+s <- rename(d, Female_Mass = Body_mass_female_mean)
+head(s$Female_Mass)  # renaming columns...
+```
+
+```{r}
+s <- mutate(d, Binomial = paste(Genus, Species, sep = " "))
+head(s$Binomial)  # and adding new columns...
+```
+
+```{r}
+s <- summarise(d, avgF = mean(Body_mass_female_mean, na.rm = TRUE), avgM = mean(Body_mass_male_mean,
+    na.rm = TRUE))
+s
+```
+
+```{r}
+byFamily <- group_by(d, Family)
+byFamily
+```
+
+```{r}
+s <- summarise(byFamily, avgF = mean(Body_mass_female_mean, na.rm = TRUE), avgM = mean(Body_mass_male_mean,
+    na.rm = TRUE))
+s
+```
+
+### Piping
+
+```{r}
+s <-
+  #to create dataframe "s"
+  d %>%
+  #take dataframe "d"
+  group_by(Family) %>%
+  #Group it by Family
+  summarise(avgF = mean(Body_mass_female_mean, na.rm=TRUE),
+  #And calculate mean male BM
+  avgM = mean(Body_mass_male_mean, na.rm=TRUE))
+  #And mean female BM
+s
+```
+
+## Challenge 8
+
+```{r}
+s <- d %>%
+    mutate(Binomial = paste(Genus, Species, sep = " ")) %>%   #add Binomial var as concatenation of genus & species
+    select(Binomial, Body_mass_female_mean, Body_mass_male_mean, Mass_Dimorphism) %>% #add to s only the vars for binomial, female mean mass, male mean mass, and mass dimorphism
+    group_by(Binomial) %>% #group by bionomial, puts members of the same genera together
+    summarise(avgF = mean(Body_mass_female_mean, na.rm = TRUE), avgM = mean(Body_mass_male_mean,
+        na.rm = TRUE), avgBMD = mean(Mass_Dimorphism, na.rm = TRUE))  #calculate averages for female mass, male mass, and mass dimorphism
+s
+```
+
+```{r}
+avgs <- s %>% 
+  filter(Binomial == "Chlorocebus pygerythrus" | Binomial == "Lagothrix lagotricha")
+avgs
+```
+
+*Chlorocebus pygerythrus*:
+
+-   Avg female mass: 3575.8 (grams?)
+
+-   Avg male mass: 5071.2
+
+-   Avg Dimorphism: 1.418
+
+*Lagothrix lagotricha:*
+
+-   Avg female mass: 7020.0
+
+-   Avg male mass: 7280.0
+
+-   Avg Dimorphism: 1.037
+
+*L. lagotricha* has larger body masses for both sexes, but *Ch. pygerythrus* is more dimorphic
+
+Compare the body size of my two main study taxa at the *Family* level (i.e., Cercopithecidae vs. Atelidae) by plotting (using {ggplot2}) the body mass of males and females and sexual dimorphism. If you can, make the Cercopithecid boxes green, and the Atelid boxes purple
+
+```{r}
+#install.packages("cowplot")
+#library(cowplot)
+d_filtered <- d %>% 
+  filter(d$Family == "Cercopithecidae" | d$Family == "Atelidae")
+
+p1 <- ggplot(data=d_filtered, aes(x=Family, y=Body_mass_male_mean, fill = Family))
+p1 <- p1 + geom_boxplot()
+p1 <- p1 + scale_fill_manual(values = c("purple","green"))
+
+p2 <- ggplot(data=d_filtered, aes(x=Family, y=Body_mass_female_mean, fill = Family))
+p2 <- p2 + geom_boxplot()
+p2 <- p2 + scale_fill_manual(values = c("purple","green"))
+
+p3 <- ggplot(data=d_filtered, aes(x=Family, y=Mass_Dimorphism, fill = Family))
+p3 <- p3 + geom_boxplot()
+p3 <- p3 + scale_fill_manual(values = c("purple","green"))
+
+plot_grid(p1, p2, p3, labels=c("Male Mass", "Female Mass", "Mass Dimorphism"))
+```
+
+# Module 7
+
+## Prelim
+
+### Definitions
+
+Measures of central tendency:
+
+**Median** - the middle value in a rank ordered series
+
+**Mode** - the most common measurement of values observed
+
+**Mean** - sum of measured values divided by sample size (n)
+
+**Harmonic mean** - reciprocal of the arithmetic mean of reciprocals
+
+ex: Harmonic mean *H* of positive real numbers =
+
+$$H(x_1, x_2, ..., x_n) = \frac{n}{\frac{1}{x_1} + \frac{1}{x_2} + ... + \frac{1}{x_n}} = \frac{n}{\sum_{i=1}^{n} \frac{1}{x_i}}$$
+
+**Geometric mean** - measure of central tendency for processes that are multiplicative, not additive; the nth root of the product of the values (also, antilog of averaged log values).
+
+ex: Geometric mean for a set of numbers $a_1, a_2, ..., a_n$ =
+
+$$
+\sqrt[n]{a_1 \times a_2 \times ... \times a_n}
+$$
+
+**Sum of squares** - the sum of the squared deviations of a set of values from the mean
+
+**Population variance** - the average deviation of values from the mean in a population, calculated by the sum of squares over population size
+
+$$
+Population \: variance = \frac{sum \: of \: squares}{N}
+$$
+
+**Sample variance** - estimator of the population variance, calculated by the sum of squares over sample size - 1
+
+$$
+sample \: variance = \frac{sum \: of \: squares}{(n-1)}
+$$
+
+### Packages
+
+```{r}
+#| label: Packages
+
+#install.packages("sciplot")
+library(sciplot)
+```
+
+## Challenge 1
+
+Given a vector x = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100, 1000}, write a function to determine the geometric mean of the values in a vector.
+
+```{r}
+#| label: Geometric Mean
+# defining vector x
+
+x <- c(-2)
+
+# geometric mean function1; takes a vector of ints or nums x and returns the product of vals in x to the power of length(x)
+
+is.neg <- function(x){
+  if(x < 0){
+    return(TRUE)
+  } else{
+  return(FALSE)
+  }
+}
+
+is.zero <- function(x){
+  if(x==0){
+    return(TRUE)
+  } else{
+    return(FALSE)
+  }
+}
+
+geomean1 <-  function(x){
+  x2 <- na.omit(x)
+  for(i in 1:length(x2)){
+    if(is.neg(x2[i]) == TRUE || is.zero(x2[i]) == TRUE){
+      x2[i] <- NA
+    }
+  }
+  x2 <- na.omit(x2)
+  (prod(x2)^(1/length(x2)))
+}
+geomean1(x)
+
+# geometric mean function2; takes a vector of ints or nums x and returns the antilog of the mean of logged vals in x
+
+geomean2 <- function(x){
+  x2 <- na.omit(x)
+  for(i in 1:length(x2)){
+    if(is.neg(x2[i]) == TRUE || is.zero(x2[i]) == TRUE){
+      x2[i] <- NA
+    }
+  }
+  x2 <- na.omit(x2)
+  exp(mean(log(x2)))
+}
+geomean2(x)
+```
+
+## Challenge 2
+
+Write a function to calculate the *sum of squares* for a vector
+
+```{r}
+#| label: Sum of Squares
+# sum of squares function 1; takes a vector of ints or nums x and returns the sum of the differences between each value in x and the mean of vals in x, squared
+
+sumsq1 <- function(x){
+  sum((x-mean(x))^2)
+}
+
+# sum of squares function 2; takes a vector of ints or nums x and returns the difference of the sum of the squared vals and the product of the length of x and the squared mean of x
+
+sumsq2 <- function(x){
+  sum(x^2) - length(x) * mean(x)^2
+}
+
+# sum of squares function 3; takes a vector of ints or nums x and returns the difference of the sum of the squared vals of x and the quotient of the sum of vals squared and the length of x
+
+sumsq3 <- function(x){
+  sum(x^2) - ((sum(x))^2/length(x))
+}
+```
+
+```{r}
+#| label: Population Variance
+
+# population variance function; takes a vector x and reutrns the mean squared deviation
+
+pop_v <- function(x){
+  sum((x-mean(x))^2)/(length(x))
+}
+```
+
+## Challenge 3
+
+Write a function to calculate the variance for a vector of values representing a *sample* of measurements. Compare the results of your function to the built in function `var()`.
+
+```{r}
+#| label: Sample Variance
+
+# sample variance function; takes a vector x and returns the sum of squares over 1 less than the sample size 
+
+samp_v <- function(x){
+  sumsq1(x)/(length(x)-1)
+}
+
+samp_v(x) == var(x)
+
+# comparison returns TRUE
+```
+
+How is variance related to sample size?
+
+```{r}
+#| label: Variance and Sample Size
+
+
+# creates a blank plot
+
+plot(c(0,50), c(0,15), type="n", xlab="Sample Size", ylab="Variance")
+
+# create a random variable drawn from a normal distribution
+
+for (n in seq(5, 50, 5)){
+  for (i in 1:50) {
+    x <- rnorm(n, mean=10, sd=2)
+    points(n, var(x))
+  }
+plot(x, type = "n", xlab="Sample Size", ylab="Variance")
+}
+```
+
+```{r}
+#| label: Standard Deviation
+
+pop_sd <- function(x){
+  sqrt(pop_v(x))
+}
+#pop_sd(x)
+
+samp_sd <- function(x){
+  sqrt(samp_v(x))
+}
+#samp_sd(x)
+#samp_sd(x) == sd(x)
+```
+
+### Using Measures of Spread
+
+**Standard Error (SE) of Mean** -
+
+1.  **SE Mean** - sqrt of the average sample variance
+2.  **SE Mean** - sqrt of $\frac{sample \: variance}{sample \: size}$
+3.  **SE Mean** - $\frac{sample \: sd}{\sqrt{(sample \: size)}}$
+
+## Challenge 4
+
+Write a function to calculate the *SE of the mean* for a vector of vals representing a sample of measurements.
+
+```{r}
+#| label: Standard Error
+
+se1 <- function(x){
+  sqrt(samp_v(x)/length(x))
+}
+#se1(x)
+
+se2 <- function(x){
+  sqrt(var(x)/length(x))
+}
+#se2(x)
+#se(x) == se1(x) & se(x) == se2(x)
+```
+
+**Confidence interval (CI)** - the likely range of values into which an estimate would fall if the sampling were repeated
+
+```{r}
+#| label: Confidence Intervals
+
+set.seed(1)
+x <- rnorm(10000, 0, 1)
+hist(x)
+
+x <- seq(from = -4, to = 4, by = 0.01)
+plot(x, dnorm(x), cex = 0.4)
+
+plot(x, pnorm(x), cex = 0.4)
+
+x <- seq(from = 0, to = 1, by = 0.01)
+plot(qnorm(x), x, cex = 0.4)
+```
+
+```{r}
+#| label: Example - Calculating CIs
+
+x <- c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15)
+m <- mean(x)
+n <- length(x)
+v <- var(x)
+s <- sd(x)
+e <- sqrt(v/n)
+upper <- mean(x) + qnorm(0.975, mean = 0, sd = 1) * se(x)
+lower <- mean(x) + qnorm(0.025, mean = 0, sd = 1) * se(x)  # or lower <- mean(x) - qnorm(0.975)*se(x)
+ci <- c(lower, upper)
+ci
+
+# or 
+
+upper <- m + qnorm(0.975, mean = 0, sd = 1) * e
+lower <- m + qnorm(0.025, mean = 0, sd = 1) * e  # or lower <- m - qnorm(0.975)*e
+ci <- c(lower, upper)
+ci
+
+# or
+
+normalCI = function(x, CIlevel = 0.95){
+  upper = m + qnorm(1-(1-CIlevel)/2) * se1(x)
+  lower = m + qnorm((1-CIlevel)/2) * se2(x)
+  ci <- c(lower, upper)
+  return(ci)
+}
+normalCI(x, 0.95)
+```
+
+```{r}
+#| label: Calculating CIs by Bootstrapping
+
+set <- NULL
+n <- 15
+for (i in 1:10000){
+  set[i] <- mean(sample(x, n, replace = TRUE))
+}
+
+quantile(set)
+quantile(set, c(0.025, 0.975))
+```
+
+## Challenge 5
+
+How does the CI calculated this way, by simulation, compare to that calculated based on assuming a normal distribution?
+
+```{r}
+normalCI(set, c(0.025, 0.975))
+quantile(set, c(0.025, 0.975))
+```
+
+> The values calculated assuming a normal distribution are closer together compared to the simulated distribution.
+
+How does the width of the CI change with decreasing or increasing **n** (the number of observations drawn from your sample with replacement)? For example, if we set **n** at 5? At 50? At 500?
+
+```{r}
+n <- 5
+for (i in 1:10000){
+  set[i] <- mean(sample(x, n, replace = TRUE))
+}
+
+quantile(set)
+quantile(set, c(0.025, 0.975))
+normalCI(set, c(0.025, 0.975))
+
+n <- 50
+for (i in 1:10000){
+  set[i] <- mean(sample(x, n, replace = TRUE))
+}
+
+quantile(set)
+quantile(set, c(0.025, 0.975))
+normalCI(set, c(0.025, 0.975))
+
+n <- 500
+for (i in 1:10000){
+  set[i] <- mean(sample(x, n, replace = TRUE))
+}
+
+quantile(set)
+quantile(set, c(0.025, 0.975))
+normalCI(set, c(0.025, 0.975))
+```
+
+> As the sample size n increases, the values converge because the sample size is a denominator of calculating SE.

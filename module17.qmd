@@ -1,0 +1,179 @@
+---
+title: "module17"
+format: html
+editor: visual
+---
+
+## Module 17
+
+```{r}
+#install.packages(c("broom", "lmtest"), repos = "http://cran.us.r-project.org")
+library(curl)
+library(broom)
+library(ggplot2)
+library(lmtest)
+```
+
+a generalized linear models consists of three components:
+
+1.  systematic or linear component
+    1.  reflects the linear combination of predictor variables in our model. can be continuous and/or categorical. interactions btwn predictors and polynomial finctions of rpedictors can also be included
+2.  error structure or random componenet
+    1.  refers to the probability distribution of the response variable and of the residualsl in the response variable after the linear component has been removed. the probability distribution in a GLM must be from the exponential family of probability distributions which included normal, binomial, poisson, gamma, negative binomial etc.
+3.  a link function
+    1.  which links the expected value of the response variable to the predictors. can be thought of as transformation function. in GLM, linear componenet yeilds a predicted value, but value is not necessarily the predicted value of response variable Y
+    2.  common link functions include
+        1.  the identity link, typically used to model mu (mean value of Y)
+        2.  the log link, typically used to model log(gamma) (log of mu)
+        3.  the logit link, which is log(pi/(1-pi)) and typically used for binary data and logistic regression
+
+![](images/clipboard-696803831.png)
+
+### model fitting in GLM
+
+model fitting and parameter estimation in GLM is commonly done using a maximum likelihood approach which is an iterative process
+
+to determine the fit of a given model, a GLM evaluates linear predictor for each value of the response variable, then back-transforms the predicted value into the scale of the Y variable using the inverse of the link function
+
+these values are compared with the observed values, paramters are adjusted, and the model is refitted on the transformed scale until the fit stops improving
+
+we judge the fit of the model on the basis of **how likely the data would be if the model were correct**
+
+the measure of discrepancy used in a GLM to asses the goodenss of fit is called the **deviance**
+
+deviance is defined as **2 times (the log-likelihood of a fully saturated model minus the log-likelihood of the prposed model)**
+
+a fully saturdated model is a model that fits the data perfectly - thus its likelihood is 1 and log-likelihood is 0, so deviance can be calculated as **-2 \* log-likelihood of the proposed model**
+
+bc the sturated model has likelihood 1, minimizing the deviance of a given model is the same as maximizing likelihood. (for the ML process of paramter estimation, it is actually easier to max the log-likelihood ln(L) than it is to max the likelihood L
+
+the glm() function in R can be used for many types of generalized linear models, using similar formula notation as we've sued before with an additional argument, family=, to specify the kind of error structure we expect in the response variable
+
+as with previous models, x can be continuous or categorical or both
+
+we will explore 2 types of GLM here: **logistic regression** (binary response variable) and **log-linear or Poisson regression** (count data)
+
+### logistic regression
+
+when we have binary response variable, we are actually interested in modeling $\pi _i$ which is P(Y = 1) for a given value of X( $x_i$ ) rather than $\mu _i$, the mean value of Y for a given X (which is what we typically model in GLR)
+
+```{r}
+f <- curl("https://raw.githubusercontent.com/fuzzyatelin/fuzzyatelin.github.io/master/AN588_Fall21/graddata.csv")
+d <- read.csv(f, header = TRUE, sep = ",")
+head(d)
+```
+
+```{r}
+glm1 <- glm(data = d, admit ~ gpa, family = "binomial")
+summary(glm1)
+```
+
+```{r}
+x <- seq(from = min(d$gpa), to = max(d$gpa), length.out = 1000)
+logOR <- predict(glm, newdata = data.frame(gpa = x))
+y <- predict(glm, newdata = data.frame(gpa = x), type = "response")
+plot(d$admit ~ d$gpa, pch = 21, type = "p", xlab = "GPA", ylab = "Pr(Y)", main = "Pr(Y) versus GPA")
+lines(y~x, type = "l")
+```
+
+```{r}
+ORchange <- exp(glm$coefficients[2])
+ORchange
+```
+
+```{r}
+glmresults <- broom::tidy(glm)
+wald <- glmresults$estimate[2]/glmresults$std.error[2]
+p <- 2*(1-pnorm(wald))
+p
+```
+
+```{r}
+CI <- confint.default(glm, level = 0.95)
+CI
+```
+
+```{r}
+dat <- data.frame(index=c(1), labels=c("gpa"), OR = c(exp(glm$coefficients[2])), LL = c((exp(glm$coefficients[2] - CI[2, 1]))), UL = c((exp(glm$coefficients[2] + CI[2, 2]))))
+dat
+```
+
+```{r}
+p1 <- ggplot(dat, aes(y = index, x = OR)) + geom_point(shape = 18, size = 5) +
+    geom_errorbarh(aes(xmin = LL, xmax = UL), height = 0.25) + geom_vline(xintercept = 1,
+    color = "red", linetype = "dashed", cex = 1, alpha = 0.5) + scale_y_continuous(name = "",
+    breaks = 1, labels = dat$label, trans = "reverse") + xlab("Odds Ratio (95% CI)") +
+    ylab(" ") + theme_bw() + theme(panel.border = element_blank(), panel.background = element_blank(),
+    panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+    axis.line = element_line(colour = "black"), axis.text.y = element_text(size = 12,
+        colour = "black"), axis.text.x.bottom = element_text(size = 12, colour = "black"),
+    axis.title.x = element_text(size = 12, colour = "black"))
+p1
+```
+
+```{r}
+library(ggstats)
+#install.packages("ggstats", repos = "http://cran.us.r-project.org")
+ggcoef_model(glm, exponentiate = TRUE)
+```
+
+```{r}
+glm0 <- glm(data = d, admit ~ 1, family = "binomial")
+glm2 <- glm(data = d, admit ~ gre, family = "binomial")
+summary(glm2)
+glm3 <- glm(data = d, admit ~ rank, family = "binomial")
+summary(glm3)
+
+#ORchange2 <- exp(glm2$coefficients[2])
+#ORchange2
+#ORchange3 <- exp(glm3$coefficients[2])
+#ORchange3
+
+#ggcoef_model(glm2, exponentiate = TRUE)
+#ggcoef_model(glm3, exponentiate = TRUE)
+```
+
+```{r}
+lrtest(glm0, glm1, glm2, glm3)
+```
+
+```{r}
+glmGGR <- glm(data = d, formula = admit ~ gpa + gre + rank, family = "binomial")
+summary(glmGGR)
+```
+
+```{r}
+coeff <- glmGGR$coefficients
+coeffCI <- cbind(coeff, confint(glmGGR))
+```
+
+```{r}
+ORcoeffCI <- exp(coeffCI)
+ORcoeffCI
+```
+
+```{r}
+glmGG <- glm(data = d, formula = admit ~ gpa + gre, family = binomial)
+glmGR <- glm(data = d, formula = admit ~ gpa + rank, family = binomial)
+glmRG <- glm(data = d, formula = admit ~ gre + rank, family = binomial)
+anova(glmGG, glmGGR, test = "Chisq")
+```
+
+```{r}
+anova(glmGR, glmGGR, test = "Chisq")
+```
+
+```{r}
+anova(glmRG, glmGGR, test = "Chisq")
+```
+
+```{r}
+# Compare model with and model without interactions
+glmNO <- glm(data = d, admit ~ rank + gpa + gre, family = "binomial")
+glmALL <- glm(data = d, admit ~ rank * gpa * gre, family = "binomial")
+anova(glmNO, glmALL, test = "Chisq")  # adding interaction terms to model doesn't significantly decrease deviance
+```
+
+```{r}
+ggcoef_model(glmGGR, exponentiate = TRUE)
+```
